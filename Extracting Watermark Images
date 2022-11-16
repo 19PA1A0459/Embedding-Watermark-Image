@@ -1,0 +1,56 @@
+clc;
+clear all;
+close all;
+load('4');
+imw = imread('lena final watermarked.jpg');
+figure,imshow(imw);
+ycbwm = rgb2ycbcr(imw);
+yw = ycbwm(:,:,1);
+cbw = ycbwm(:,:,2);
+crw = ycbwm(:,:,3);
+figure,imshow(uint8(yw));
+[Aw,Hw,Vw,Dw]=dwt2(yw,'haar');
+[uw,sw,vw]=svd(Dw);
+[iwu,iws,iwv]=svd(double(P));
+%watermark extraction procedure
+bmw=length(sw);
+wms=[];
+for i=1:bmw
+    for j=1:bmw
+        if sw(i,j)<=iws(i,j)
+        wms(i,j) = (iws(i,j)-sw(i,j))/con1;
+     else
+         wms(i,j) = (sw(i,j)-iws(i,j))/con1;
+     end
+    end
+end
+wref = iwu*wms*iwv';
+wmm = uint8(wref/100);
+imwrite(wmm,'bext-watermark.jpg');
+nc1 = corr2(iws,wms)
+nc2 = corr2(P,wmm)
+figure,imshow(wmm);
+title('extracted watermark image');
+[Aw1,Hw1,Vw1,Dw1]=dwt2(wmm,'haar');
+[uw1,sw1,vw1]=svd(Dw1);
+[iwu1,iws1,iwv1]=svd(double(c1));
+%watermark extraction procedure
+bmw1=length(sw1);
+wms1=[];
+for i=1:bmw1
+    for j=1:bmw1
+        if sw1(i,j)<=iws1(i,j)
+        wms1(i,j) = (iws1(i,j)-sw1(i,j))/con2;
+     else
+         wms1(i,j) = (sw1(i,j)-iws1(i,j))/con2;
+     end
+    end
+end
+wmss=imresize(wms1,[110 110]);
+wref1 = iwu1*wmss*iwv1';
+wmm1 = uint8(wref1/4);
+imwrite(wmm1,'bext-watermark.jpg');
+nc3 = corr2(iws1,wmss)
+nc4 = corr2(c1,wmm1)
+figure,imshow(wmm1);
+title('extracted watermark image');
