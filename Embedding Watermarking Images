@@ -1,0 +1,97 @@
+clc;
+clear all;
+close all;
+o=imread('lenna.jpg');
+imshow(o);
+ycb1 = rgb2ycbcr(o);
+ y = ycb1(:,:,1);
+cb = ycb1(:,:,2);
+cr = ycb1(:,:,3);
+figure,imshow(uint8(y));title('first Cover Image');
+[A,H,V,D]=dwt2(y,'haar');
+[u,s,v]=svd(A);
+P1 = imread('cameraman.jpg');
+P2=rgb2gray(P1);
+P=imresize(P2,[110 110]);
+[u1,s1,v1]=svd(double(P));
+figure,
+imshow(P);
+title('watermark image');
+% First watermark embedding procedure
+con1=0.01;
+bm=length(s1);
+      for i=1:bm
+          for j=1:bm
+      sb1(i,j)=s(i,j)+con1*s1(i,j);
+          end;
+      end;
+       sb11 = u*sb1*v';
+   wmd1=idwt2(sb11,H,V,D,'haar');% inverse swt 
+  wmd=uint8(wmd1);
+  %output
+% figure,imshow(wmd);title('watermarked reference image');
+% imwrite(wmd,'watermarked reference image.jpg');
+% im1=uint8(im1);
+imwrite(wmd,'first watermarked image.jpg')
+figure,
+imshow(wmd);
+[A1,H1,V1,D1]=dwt2(wmd,'haar');
+[u2,s2,v2]=svd(A1);
+c2 = imread('copy.jpg');
+c3=rgb2gray(c2);
+c1=imresize(c3,[110 110]);
+[u12,s12,v12]=svd(double(c1));
+figure,
+imshow(c1);
+title('second watermark image');
+% second watermark embedding procedure
+con2=0.25;
+bm=length(s12);
+      for i=1:bm
+          for j=1:bm
+      sb12(i,j)=s2(i,j)+con1*s12(i,j);
+          end
+      end
+       sb112 = u2*sb12*v2';
+   wmd12=idwt2(sb112,H1,V1,D1,'haar');% inverse swt 
+  wmd2=uint8(wmd12);
+  %output
+% figure,imshow(wmd2);title('second watermarked reference image');
+% imwrite(wmd2,'second watermarked reference image.jpg');
+% im2=uint8(im2);
+% imwrite(im2,'output image.jpg');
+figure,
+imshow(wmd2);
+title('outputimage');
+wmd3=imresize(wmd2,[220 220]);
+sk1 = zeros(512,512,3);
+    sk11(:,:,1)=uint8(wmd3);
+    sk11(:,:,2)=cb;
+    sk11(:,:,3)=cr;
+    z = ycbcr2rgb(sk11);
+    imwrite(z,'lena final watermarked.jpg');
+figure,imshow(z);title('Last watermarked color image');
+% imwrite(im2,'dual watermarked image.jpg');
+ 
+% %psnr 
+  f=o;
+ F=z;
+[im,in]=size(z);
+sum=double(0);
+for i=1:im
+    for j=1:in
+        if F(i,j)>f(i,j)
+          s=double((F(i,j)-f(i,j)));
+        else
+            s=double((f(i,j)-F(i,j)));
+        end
+        p=double(power(s,2));
+        sum=sum+p;
+    end
+end
+error=sum/(im*in);
+rms=sqrt(error);
+psn=20*log10(255/rms)
+ssimval = ssim(o,z)
+save('4');
+
